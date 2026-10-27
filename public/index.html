@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard · Real Estate CRM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script src="/js/tailwind.config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/th.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+</head>
+<body class="font-sans text-slate-800 antialiased">
+  <aside id="sidebar"></aside>
+  <div class="min-h-screen lg:pl-64">
+    <header id="topbar"></header>
+
+    <main class="space-y-6 p-4 md:p-6 lg:p-8">
+      <!-- Hero -->
+      <section class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-900 via-brand-800 to-brand-700 p-6 text-white md:p-8">
+        <div class="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-gold-400/20 blur-3xl"></div>
+        <div class="pointer-events-none absolute -bottom-24 right-40 h-56 w-56 rounded-full bg-brand-400/20 blur-3xl"></div>
+        <div class="relative flex flex-wrap items-end justify-between gap-6">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[.18em] text-gold-300">Sales Overview</p>
+            <h2 class="mt-2 text-2xl font-semibold md:text-3xl" id="greeting">ภาพรวมการบริหารการขาย</h2>
+            <p class="mt-1 text-sm text-brand-100">ข้อมูลช่วง: <span class="font-medium text-white" data-range-label></span></p>
+            <p class="mt-2 flex items-center gap-1 text-xs text-gold-300" data-scope-note hidden></p>
+          </div>
+          <div class="grid grid-cols-2 gap-x-8 gap-y-3 text-sm" id="hero-values" data-perm="dashboard:finance"></div>
+        </div>
+      </section>
+
+      <!-- Summary cards -->
+      <section id="summary" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"></section>
+
+      <!-- Trend + funnel -->
+      <section class="grid gap-4 xl:grid-cols-3">
+        <div class="card p-5 xl:col-span-2">
+          <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="card-title">แนวโน้มกิจกรรมการขาย</h3>
+              <p class="card-sub" id="trend-sub">จำนวนรายการตามช่วงเวลา</p>
+            </div>
+          </div>
+          <div class="relative h-72"><canvas id="chart-trend"></canvas></div>
+        </div>
+        <div class="card p-5">
+          <h3 class="card-title">Sales Funnel</h3>
+          <p class="card-sub mb-4">อัตราการเปลี่ยนสถานะในแต่ละขั้น</p>
+          <div id="funnel" class="space-y-4"></div>
+        </div>
+      </section>
+
+      <!-- Breakdown -->
+      <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div class="card p-5">
+          <h3 class="card-title">Lead แยกตามช่องทาง</h3>
+          <p class="card-sub mb-4">ช่องทางที่สร้าง Lead มากที่สุด</p>
+          <div class="relative h-64"><canvas id="chart-lead-channel"></canvas></div>
+        </div>
+        <div class="card p-5">
+          <h3 class="card-title">สถานะลูกค้า Walk In</h3>
+          <p class="card-sub mb-4">สัดส่วน Grade A – D</p>
+          <div class="relative h-64"><canvas id="chart-grade"></canvas></div>
+        </div>
+        <div class="card p-5 md:col-span-2 xl:col-span-1">
+          <h3 class="card-title">ทางลัด</h3>
+          <p class="card-sub mb-4">บันทึกข้อมูลใหม่หรือดูรายการตามช่วงวันที่ที่เลือก</p>
+          <div class="grid grid-cols-2 gap-3" id="shortcuts"></div>
+        </div>
+      </section>
+
+      <!-- Team performance (Admin / Manager) -->
+      <section class="card overflow-hidden" data-perm="team:view">
+        <div class="border-b border-slate-100 p-4">
+          <h3 class="card-title">ผลงานทีมขาย</h3>
+          <p class="card-sub">สรุปตามผู้รับผิดชอบในช่วงเวลาที่เลือก · เรียงตามยอดโอน</p>
+        </div>
+        <div id="team-table"></div>
+      </section>
+
+      <!-- Recent bookings -->
+      <section class="card overflow-hidden" data-perm="bookings:read">
+        <div class="flex items-center justify-between border-b border-slate-100 p-4">
+          <div>
+            <h3 class="card-title">การจองล่าสุด</h3>
+            <p class="card-sub">ในช่วงเวลาที่เลือก</p>
+          </div>
+          <a data-range-link="/bookings" href="/bookings" class="btn btn-ghost btn-sm">ดูทั้งหมด <span data-icon="arrowRight" class="w-3.5 h-3.5"></span></a>
+        </div>
+        <div id="recent-table"></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="/js/pages/dashboard.js"></script>
+</body>
+</html>

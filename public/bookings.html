@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Booking · Real Estate CRM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script src="/js/tailwind.config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/th.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+</head>
+<body class="font-sans text-slate-800 antialiased">
+  <aside id="sidebar"></aside>
+  <div class="min-h-screen lg:pl-64">
+    <header id="topbar"></header>
+
+    <main class="space-y-6 p-4 md:p-6 lg:p-8">
+      <section class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p class="eyebrow">Booking</p>
+          <p class="mt-1 text-sm text-slate-500">ข้อมูลช่วง: <span class="font-medium text-slate-700" data-range-label></span></p>
+        </div>
+        <button type="button" class="btn btn-primary" data-new data-perm="bookings:write"><span data-icon="plus" class="w-4 h-4"></span> บันทึกการจอง</button>
+      </section>
+
+      <section id="kpis" class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5"></section>
+
+      <section class="card overflow-hidden">
+        <div class="flex flex-wrap items-center gap-3 border-b border-slate-100 p-4">
+          <h3 class="card-title mr-auto">รายการจอง</h3>
+          <label class="relative w-full sm:w-64">
+            <span data-icon="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></span>
+            <input type="search" id="filter-q" class="field-input !pl-9" placeholder="ค้นหาชื่อ, โครงการ, แปลง">
+          </label>
+          <select id="filter-status" class="field-input sm:!w-36" data-options="bookingStatuses" data-placeholder="ทุกสถานะ" aria-label="กรองสถานะ"></select>
+          <select id="filter-payment" class="field-input sm:!w-40" data-options="paymentMethods" data-placeholder="ทุกวิธีการซื้อ" aria-label="กรองวิธีการซื้อ"></select>
+        </div>
+        <div id="booking-table"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Booking form -->
+  <div class="modal" id="booking-modal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <form id="booking-form" class="modal-panel max-w-2xl">
+      <header class="modal-header">
+        <h3 data-modal-title>บันทึกการจอง</h3>
+        <button type="button" class="icon-btn" data-close aria-label="ปิด"><span data-icon="x" class="w-5 h-5"></span></button>
+      </header>
+      <div class="modal-body space-y-5">
+        <div class="flex flex-wrap items-center gap-3 rounded-xl border border-dashed border-brand-200 bg-brand-50/60 p-3">
+          <div class="min-w-0 flex-1 text-sm" id="walkin-link">
+            <p class="font-medium text-brand-900">ลูกค้าจาก Walk In</p>
+            <p class="text-xs text-slate-500">ดึงชื่อและเบอร์โทรจากรายการ Walk In มากรอกอัตโนมัติ</p>
+          </div>
+          <button type="button" class="btn btn-gold btn-sm" id="pick-walkin"><span data-icon="import" class="w-4 h-4"></span> ดึงข้อมูลจาก Walk In</button>
+        </div>
+        <input type="hidden" name="walkinId">
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="field">
+            <span class="field-label">วันที่จอง <b class="req">*</b></span>
+            <input type="date" name="date" class="field-input" required>
+          </label>
+          <label class="field">
+            <span class="field-label">สถานะการจอง</span>
+            <select name="status" class="field-input">
+              <option value="จองแล้ว">จองแล้ว</option>
+              <option value="ยกเลิก">ยกเลิก</option>
+              <option value="โอนแล้ว" disabled>โอนแล้ว (อัปเดตจากหน้า Transfer)</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field-label">ชื่อ - นามสกุล <b class="req">*</b></span>
+            <input type="text" name="name" class="field-input" placeholder="ชื่อ - นามสกุล" required maxlength="120">
+          </label>
+          <label class="field">
+            <span class="field-label">หมายเลขติดต่อ</span>
+            <input type="tel" name="phone" class="field-input" placeholder="08x-xxx-xxxx" maxlength="20">
+          </label>
+          <label class="field">
+            <span class="field-label">โครงการที่จอง <b class="req">*</b></span>
+            <input type="text" name="project" class="field-input" list="project-list" placeholder="ชื่อโครงการ" required>
+            <datalist id="project-list" data-options="projects"></datalist>
+          </label>
+          <label class="field">
+            <span class="field-label">แปลงที่จอง <b class="req">*</b></span>
+            <input type="text" name="plot" class="field-input" placeholder="เช่น A-12" required maxlength="40">
+          </label>
+          <label class="field">
+            <span class="field-label">ราคาแปลงที่จอง (บาท) <b class="req">*</b></span>
+            <input type="number" name="price" class="field-input" min="0" step="1000" placeholder="เช่น 12500000" required>
+          </label>
+          <label class="field">
+            <span class="field-label">จำนวนเงินจอง (บาท) <b class="req">*</b></span>
+            <input type="number" name="deposit" class="field-input" min="0" step="1000" placeholder="เช่น 100000" required>
+          </label>
+          <div class="field sm:col-span-2">
+            <span class="field-label">วิธีการซื้อ <b class="req">*</b></span>
+            <div class="flex flex-wrap gap-2" data-chips="paymentMethods" data-name="paymentMethod" data-type="radio"></div>
+          </div>
+          <label class="field sm:col-span-2" data-perm="records:assign">
+            <span class="field-label">ฝ่ายขายผู้รับผิดชอบ</span>
+            <select name="assignedTo" class="field-input" data-assignees data-placeholder="— ใช้ผู้รับผิดชอบเดียวกับ Walk In / ยังไม่มอบหมาย —"></select>
+          </label>
+          <label class="field sm:col-span-2">
+            <span class="field-label">หมายเหตุ</span>
+            <textarea name="note" class="field-input" rows="2" placeholder="เงื่อนไขพิเศษ ของแถม หรือข้อตกลงเพิ่มเติม"></textarea>
+          </label>
+        </div>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-ghost" data-close>ยกเลิก</button>
+        <button type="submit" class="btn btn-primary">บันทึกการจอง</button>
+      </footer>
+    </form>
+  </div>
+
+  <!-- Walk In picker -->
+  <div class="modal" id="walkin-picker" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-panel max-w-xl">
+      <header class="modal-header">
+        <h3>เลือกลูกค้าจาก Walk In</h3>
+        <button type="button" class="icon-btn" data-close aria-label="ปิด"><span data-icon="x" class="w-5 h-5"></span></button>
+      </header>
+      <div class="modal-body space-y-3">
+        <label class="relative block">
+          <span data-icon="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></span>
+          <input type="search" id="picker-q" class="field-input !pl-9" placeholder="ค้นหาชื่อหรือเบอร์โทร (แสดง Walk In ทุกช่วงเวลา)" autofocus>
+        </label>
+        <div class="flex flex-wrap gap-2" id="picker-grades">
+          <label class="chip"><input type="radio" name="picker-grade" value="" checked><span>ทั้งหมด</span></label>
+          <label class="chip"><input type="radio" name="picker-grade" value="A"><span>Grade A</span></label>
+          <label class="chip"><input type="radio" name="picker-grade" value="B"><span>Grade B</span></label>
+          <label class="chip"><input type="radio" name="picker-grade" value="C"><span>Grade C</span></label>
+        </div>
+        <ul id="picker-list" class="max-h-[50vh] overflow-y-auto scroll-thin divide-y divide-slate-100 rounded-xl border border-slate-200"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/pages/bookings.js"></script>
+</body>
+</html>

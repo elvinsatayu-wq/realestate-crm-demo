@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ผู้ใช้งาน · Real Estate CRM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script src="/js/tailwind.config.js"></script>
+</head>
+<body class="font-sans text-slate-800 antialiased">
+  <aside id="sidebar"></aside>
+  <div class="min-h-screen lg:pl-64">
+    <header id="topbar"></header>
+
+    <main class="space-y-6 p-4 md:p-6 lg:p-8">
+      <section class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p class="eyebrow">User Management</p>
+          <p class="mt-1 text-sm text-slate-500">จัดการบัญชีผู้ใช้งานและบทบาท (Role) ของทีม</p>
+        </div>
+        <button type="button" class="btn btn-primary" data-new><span data-icon="plus" class="w-4 h-4"></span> เพิ่มผู้ใช้งาน</button>
+      </section>
+
+      <section class="grid gap-4 md:grid-cols-3">
+        <div class="card p-5">
+          <div class="flex items-center justify-between"><span class="inline-flex rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-semibold text-rose-700 ring-1 ring-inset ring-rose-600/20">Admin</span><span class="text-2xl font-semibold tabular-nums text-slate-900" data-count="admin">0</span></div>
+          <ul class="mt-3 space-y-1.5 text-sm text-slate-600">
+            <li>• เข้าถึงได้ทุกหน้า</li>
+            <li>• จัดการผู้ใช้งานและสิทธิ์</li>
+            <li>• ดูภาพรวมงบประมาณและยอดขายทั้งหมด</li>
+            <li>• ลบรายการจองและการโอนได้</li>
+          </ul>
+        </div>
+        <div class="card p-5">
+          <div class="flex items-center justify-between"><span class="inline-flex rounded-full bg-violet-50 px-2.5 py-0.5 text-xs font-semibold text-violet-700 ring-1 ring-inset ring-violet-600/20">Manager</span><span class="text-2xl font-semibold tabular-nums text-slate-900" data-count="manager">0</span></div>
+          <ul class="mt-3 space-y-1.5 text-sm text-slate-600">
+            <li>• ดูรายงานและข้อมูลการขายของทั้งทีม</li>
+            <li>• มอบหมายลูกค้าให้ฝ่ายขาย</li>
+            <li>• บันทึก/อัปเดตสถานะการจองและการโอน</li>
+            <li>• ไม่สามารถลบการจอง/โอน และจัดการผู้ใช้</li>
+          </ul>
+        </div>
+        <div class="card p-5">
+          <div class="flex items-center justify-between"><span class="inline-flex rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-semibold text-sky-700 ring-1 ring-inset ring-sky-600/20">Sales</span><span class="text-2xl font-semibold tabular-nums text-slate-900" data-count="sales">0</span></div>
+          <ul class="mt-3 space-y-1.5 text-sm text-slate-600">
+            <li>• บันทึกข้อมูล Lead และ Walk In</li>
+            <li>• เห็นและแก้ไขเฉพาะลูกค้าที่ได้รับมอบหมาย</li>
+            <li>• Dashboard แสดงเฉพาะผลงานของตนเอง</li>
+            <li>• ไม่เห็นหน้า Booking / Transfer</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="card overflow-hidden">
+        <div class="flex flex-wrap items-center gap-3 border-b border-slate-100 p-4">
+          <h3 class="card-title mr-auto">รายชื่อผู้ใช้งาน</h3>
+          <label class="relative w-full sm:w-64">
+            <span data-icon="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></span>
+            <input type="search" id="filter-q" class="field-input !pl-9" placeholder="ค้นหาชื่อหรือชื่อผู้ใช้">
+          </label>
+          <select id="filter-role" class="field-input sm:!w-40" aria-label="กรองบทบาท">
+            <option value="">ทุกบทบาท</option>
+            <option value="admin">Admin</option>
+            <option value="manager">Manager</option>
+            <option value="sales">Sales</option>
+          </select>
+        </div>
+        <div id="user-table"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- User form -->
+  <div class="modal" id="user-modal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <form id="user-form" class="modal-panel max-w-lg">
+      <header class="modal-header">
+        <h3 data-modal-title>เพิ่มผู้ใช้งาน</h3>
+        <button type="button" class="icon-btn" data-close aria-label="ปิด"><span data-icon="x" class="w-5 h-5"></span></button>
+      </header>
+      <div class="modal-body grid gap-4 sm:grid-cols-2">
+        <label class="field sm:col-span-2">
+          <span class="field-label">ชื่อ - นามสกุล <b class="req">*</b></span>
+          <input type="text" name="name" class="field-input" required maxlength="120" placeholder="เช่น คุณสมชาย ใจดี">
+        </label>
+        <label class="field">
+          <span class="field-label">ชื่อผู้ใช้ (Username) <b class="req">*</b></span>
+          <input type="text" name="username" class="field-input" required minlength="3" maxlength="32" autocapitalize="none" spellcheck="false" autocomplete="off" placeholder="a-z, 0-9, . _ -">
+        </label>
+        <label class="field">
+          <span class="field-label">รหัสผ่าน <b class="req" data-password-req>*</b></span>
+          <input type="password" name="password" class="field-input" minlength="8" autocomplete="new-password" placeholder="อย่างน้อย 8 ตัวอักษร">
+          <span class="mt-1 block text-xs text-slate-400" data-password-hint></span>
+        </label>
+        <label class="field">
+          <span class="field-label">บทบาท (Role) <b class="req">*</b></span>
+          <select name="role" class="field-input" required>
+            <option value="sales">Sales</option>
+            <option value="manager">Manager</option>
+            <option value="admin">Admin</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">สถานะบัญชี</span>
+          <select name="active" class="field-input">
+            <option value="true">ใช้งาน</option>
+            <option value="false">ปิดใช้งาน</option>
+          </select>
+        </label>
+        <p class="sm:col-span-2 hidden rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800" data-self-note>
+          นี่คือบัญชีของคุณ — ไม่สามารถเปลี่ยนบทบาทหรือปิดการใช้งานตนเองได้
+        </p>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-ghost" data-close>ยกเลิก</button>
+        <button type="submit" class="btn btn-primary">บันทึก</button>
+      </footer>
+    </form>
+  </div>
+
+  <script type="module" src="/js/pages/users.js"></script>
+</body>
+</html>

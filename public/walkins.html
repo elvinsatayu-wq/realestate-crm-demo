@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Walk In Management · Real Estate CRM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script src="/js/tailwind.config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/th.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+</head>
+<body class="font-sans text-slate-800 antialiased">
+  <aside id="sidebar"></aside>
+  <div class="min-h-screen lg:pl-64">
+    <header id="topbar"></header>
+
+    <main class="space-y-6 p-4 md:p-6 lg:p-8">
+      <section class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p class="eyebrow">Walk In Management</p>
+          <p class="mt-1 text-sm text-slate-500">ข้อมูลช่วง: <span class="font-medium text-slate-700" data-range-label></span></p>
+          <p class="mt-1 flex items-center gap-1 text-xs text-brand-600" data-scope-note hidden></p>
+        </div>
+        <button type="button" class="btn btn-primary" data-new data-perm="walkins:write"><span data-icon="plus" class="w-4 h-4"></span> บันทึก Walk In</button>
+      </section>
+
+      <section id="kpis" class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5"></section>
+
+      <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div class="card p-5">
+          <h3 class="card-title">ช่องทางรับรู้สื่อ</h3>
+          <p class="card-sub mb-4">ลูกค้ารู้จักโครงการจากที่ใด</p>
+          <div class="relative h-60"><canvas id="chart-media"></canvas></div>
+        </div>
+        <div class="card p-5">
+          <h3 class="card-title">เหตุผลที่เข้าชม</h3>
+          <p class="card-sub mb-4">เลือกได้มากกว่า 1 ข้อ</p>
+          <div class="relative h-60"><canvas id="chart-reasons"></canvas></div>
+        </div>
+        <div class="card p-5">
+          <h3 class="card-title">ช่วงงบประมาณ</h3>
+          <p class="card-sub mb-4">งบที่ลูกค้าตั้งไว้</p>
+          <div class="relative h-60"><canvas id="chart-budget"></canvas></div>
+        </div>
+        <div class="card p-5">
+          <h3 class="card-title">สัดส่วนสถานะลูกค้า</h3>
+          <p class="card-sub mb-4">Grade A – D</p>
+          <div class="relative h-60"><canvas id="chart-grade"></canvas></div>
+        </div>
+        <div class="card p-5">
+          <h3 class="card-title">เพศ</h3>
+          <p class="card-sub mb-4">สัดส่วนผู้เข้าชม</p>
+          <div class="relative h-60"><canvas id="chart-gender"></canvas></div>
+        </div>
+        <div class="card p-5">
+          <h3 class="card-title">ช่วงอายุ</h3>
+          <p class="card-sub mb-4">อายุผู้เข้าชม (ปี)</p>
+          <div class="relative h-60"><canvas id="chart-age"></canvas></div>
+        </div>
+        <div class="card p-5">
+          <h3 class="card-title">อาชีพ</h3>
+          <p class="card-sub mb-4">กลุ่มอาชีพของผู้เข้าชม</p>
+          <div class="relative h-60"><canvas id="chart-occupation"></canvas></div>
+        </div>
+        <div class="card p-5">
+          <h3 class="card-title">ระดับรายได้ต่อเดือน</h3>
+          <p class="card-sub mb-4">รายได้โดยประมาณ (บาท)</p>
+          <div class="relative h-60"><canvas id="chart-income"></canvas></div>
+        </div>
+      </section>
+
+      <section class="card overflow-hidden">
+        <div class="flex flex-wrap items-center gap-3 border-b border-slate-100 p-4">
+          <h3 class="card-title mr-auto">รายการ Walk In</h3>
+          <label class="relative w-full sm:w-64">
+            <span data-icon="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></span>
+            <input type="search" id="filter-q" class="field-input !pl-9" placeholder="ค้นหาชื่อ, เบอร์โทร, เขต, ฝ่ายขาย">
+          </label>
+          <select id="filter-grade" class="field-input sm:!w-36" aria-label="กรอง Grade">
+            <option value="">ทุก Grade</option>
+            <option value="A">Grade A</option>
+            <option value="B">Grade B</option>
+            <option value="C">Grade C</option>
+            <option value="D">Grade D</option>
+          </select>
+          <select id="filter-media" class="field-input sm:!w-40" data-options="mediaChannels" data-placeholder="ทุกช่องทางสื่อ" aria-label="กรองช่องทางสื่อ"></select>
+          <select id="filter-assignee" class="field-input sm:!w-48" data-perm="records:all" data-assignees data-unassigned data-placeholder="ฝ่ายขายทั้งหมด" aria-label="กรองฝ่ายขาย"></select>
+        </div>
+        <div id="walkin-table"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Walk In form -->
+  <div class="modal" id="walkin-modal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <form id="walkin-form" class="modal-panel max-w-4xl">
+      <header class="modal-header">
+        <h3 data-modal-title>บันทึก Walk In</h3>
+        <button type="button" class="icon-btn" data-close aria-label="ปิด"><span data-icon="x" class="w-5 h-5"></span></button>
+      </header>
+
+      <div class="modal-body space-y-6">
+        <fieldset class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <legend class="form-section col-span-full mb-1 w-full">ข้อมูลการเข้าชม</legend>
+          <label class="field">
+            <span class="field-label">วันที่เข้าชม <b class="req">*</b></span>
+            <input type="date" name="date" class="field-input" required>
+          </label>
+          <label class="field">
+            <span class="field-label">เวลาที่เข้าชม <b class="req">*</b></span>
+            <input type="time" name="time" class="field-input" required>
+          </label>
+          <label class="field">
+            <span class="field-label">ช่องทางรับรู้สื่อ <b class="req">*</b></span>
+            <select name="media" class="field-input" data-options="mediaChannels" data-placeholder="เลือกช่องทาง" required></select>
+          </label>
+          <label class="field" data-perm="records:assign">
+            <span class="field-label">ฝ่ายขายที่รับผิดชอบ</span>
+            <select name="assignedTo" class="field-input" data-assignees data-placeholder="— ยังไม่มอบหมาย —"></select>
+          </label>
+        </fieldset>
+
+        <fieldset class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <legend class="form-section col-span-full mb-1 w-full">ข้อมูลลูกค้า</legend>
+          <label class="field sm:col-span-2">
+            <span class="field-label">ชื่อ - นามสกุล <b class="req">*</b></span>
+            <input type="text" name="name" class="field-input" placeholder="ชื่อ - นามสกุล" required maxlength="120">
+          </label>
+          <label class="field">
+            <span class="field-label">หมายเลขติดต่อ</span>
+            <input type="tel" name="phone" class="field-input" placeholder="08x-xxx-xxxx" maxlength="20">
+          </label>
+          <label class="field">
+            <span class="field-label">Line ID</span>
+            <input type="text" name="lineId" class="field-input" placeholder="Line ID" maxlength="60">
+          </label>
+          <div class="field sm:col-span-2">
+            <span class="field-label">เพศ</span>
+            <div class="flex flex-wrap gap-2" data-chips="genders" data-name="gender" data-type="radio"></div>
+          </div>
+          <label class="field">
+            <span class="field-label">อายุ (ปี)</span>
+            <input type="number" name="age" class="field-input" min="18" max="100" placeholder="เช่น 35">
+          </label>
+          <label class="field">
+            <span class="field-label">จำนวนผู้อยู่อาศัย (คน)</span>
+            <input type="number" name="residents" class="field-input" min="1" max="20" placeholder="เช่น 4">
+          </label>
+          <label class="field sm:col-span-2">
+            <span class="field-label">อาชีพ</span>
+            <select name="occupation" class="field-input" data-options="occupations" data-placeholder="เลือกอาชีพ"></select>
+          </label>
+          <label class="field">
+            <span class="field-label">รายได้ต่อเดือนโดยประมาณ (บาท)</span>
+            <input type="number" name="income" class="field-input" min="0" step="1000" placeholder="เช่น 150000">
+          </label>
+          <label class="field">
+            <span class="field-label">งบประมาณ</span>
+            <select name="budget" class="field-input" data-options="budgets" data-placeholder="เลือกช่วงงบ"></select>
+          </label>
+        </fieldset>
+
+        <fieldset class="grid gap-4 sm:grid-cols-3">
+          <legend class="form-section col-span-full mb-1 w-full">การเดินทางและที่อยู่</legend>
+          <label class="field">
+            <span class="field-label">เส้นทางที่ใช้เดินทางมายังโครงการ</span>
+            <input type="text" name="route" class="field-input" placeholder="เช่น ถนนบางนา-ตราด">
+          </label>
+          <label class="field">
+            <span class="field-label">เขตที่อยู่อาศัยปัจจุบัน</span>
+            <input type="text" name="homeDistrict" class="field-input" placeholder="เช่น บางนา">
+          </label>
+          <label class="field">
+            <span class="field-label">เขตที่ทำงาน</span>
+            <input type="text" name="workDistrict" class="field-input" placeholder="เช่น สาทร">
+          </label>
+        </fieldset>
+
+        <fieldset class="grid gap-4">
+          <legend class="form-section mb-1 w-full">ความสนใจ</legend>
+          <div class="field">
+            <span class="field-label">เหตุผลที่เข้าชมโครงการ <span class="font-normal text-slate-400">(เลือกได้หลายข้อ)</span></span>
+            <div class="flex flex-wrap gap-2" data-chips="visitReasons" data-name="reasons"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">โปรโมชันที่สนใจ <span class="font-normal text-slate-400">(เลือกได้หลายข้อ)</span></span>
+            <div class="flex flex-wrap gap-2" data-chips="promotions" data-name="promotions"></div>
+          </div>
+          <label class="field">
+            <span class="field-label">รายละเอียดการเข้าชมเพิ่มเติม</span>
+            <textarea name="detail" class="field-input" rows="3" placeholder="ความต้องการ แบบบ้านที่สนใจ ข้อกังวล หรือการต่อรอง"></textarea>
+          </label>
+          <div class="field">
+            <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <span class="field-label !mb-0">บันทึกการติดตาม</span>
+              <button type="button" class="btn btn-soft btn-sm" data-add-followup><span data-icon="plus" class="w-4 h-4"></span> เพิ่มบันทึกการติดตาม</button>
+            </div>
+            <div class="space-y-3" data-followups></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend class="form-section mb-3 w-full">สถานะลูกค้า <b class="req text-red-600">*</b></legend>
+          <div class="grid gap-3 sm:grid-cols-2" id="grade-options"></div>
+        </fieldset>
+      </div>
+
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-ghost" data-close>ยกเลิก</button>
+        <button type="submit" class="btn btn-primary">บันทึกข้อมูล</button>
+      </footer>
+    </form>
+  </div>
+
+  <script type="module" src="/js/pages/walkins.js"></script>
+</body>
+</html>
